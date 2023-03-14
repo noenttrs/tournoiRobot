@@ -37,13 +37,13 @@ Les rendre controllables :
     - temps estimé : 15~20min
     - temps utilisé : 5min
 
-Gérer les collisions :  -- sera géré par les utilisateurs 
-    - temps estimé : 20~30min
-    - temps utilisé : 
-
-Gérer la capacité à communiquer : -- sera géré par les utilisateurs
+Gérer la capacité à communiquer :
     - temps estimé : 30min
     - temps utilisé :
+
+Gérer les collisions et les sorties de plateau : 
+    - temps estimé : 20~30min
+    - temps utilisé : 10 min
 
 
 Contrainte et méthodes:
