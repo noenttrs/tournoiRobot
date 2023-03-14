@@ -60,74 +60,47 @@ class Cible {
 class Robot {
     constructor(startPlace) {
         this.espace = 10;
-        this.width = 50;
-        this.height = 40;
+        this.radius = 25;
         this.name = startPlace;
 
         switch (startPlace) {
             case 1:
-                this.x = centre.x - this.width * 2 - this.espace * 1.5;
-                this.y = centre.y - this.height * 1.5 - this.espace;
+                this.x = centre.x - this.radius*3 - this.espace*1.5;
+                this.y = centre.y - this.radius*1 - this.espace;
                 break;
             case 2:
-                this.x = centre.x - this.width * 1 - this.espace * 0.5;
-                this.y = centre.y - this.height * 1.5 - this.espace;
+                this.x = centre.x - this.radius - this.espace*0.5;
+                this.y = centre.y - this.radius*1 - this.espace;
                 break;
             case 3:
-                this.x = centre.x + this.espace * 0.5;
-                this.y = centre.y - this.height * 1.5 - this.espace;
+                this.x = centre.x + this.radius + this.espace*0.5;
+                this.y = centre.y - this.radius*1 - this.espace;
                 break;
             case 4:
-                this.x = centre.x + this.width + this.espace * 1.5;
-                this.y = centre.y - this.height * 1.5 - this.espace;
+                this.x = centre.x + this.radius*3 + this.espace*1.5;
+                this.y = centre.y - this.radius*1 - this.espace;
                 break;
             case 5:
-                this.x = centre.x - this.width * 2 - this.espace * 1.5;
-                this.y = centre.y - this.height * 0.5;
-                break;
-            case 6:
-                this.x = centre.x - this.width * 1 - this.espace * 0.5;
-                this.y = centre.y - this.height * 0.5;
-                break;
-            case 7:
-                this.x = centre.x + this.espace * 0.5;
-                this.y = centre.y - this.height * 0.5;
-                break;
-            case 8:
-                this.x = centre.x + this.width + this.espace * 1.5;
-                this.y = centre.y - this.height * 0.5;
-                break;
-            case 9:
-                this.x = centre.x - this.width * 2 - this.espace * 1.5;
-                this.y = centre.y + this.height * 0.5 + this.espace;
-                break;
-            case 10:
-                this.x = centre.x - this.width * 1 - this.espace * 0.5;
-                this.y = centre.y + this.height * 0.5 + this.espace;
-                break;
-            case 11:
-                this.x = centre.x + this.espace * 0.5;
-                this.y = centre.y + this.height * 0.5 + this.espace;
-                break;
-            case 12:
-                this.x = centre.x + this.width + this.espace * 1.5;
-                this.y = centre.y + this.height * 0.5 + this.espace;
+                this.x = centre.x - this.radius*3 - this.espace*1.5;
+                this.y = centre.y;
                 break;
         }
 
         this.radarRadius = 100;
-        this.color = 'brown';
+        this.color = '#7B3F00';
         this.speed = 2;
         this.direction = 0;
     }
 
     draw() { //draw with rotate and translate
         ctx.fillStyle = this.color;
-        ctx.save();
-        ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-        ctx.rotate(this.direction);
-        ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        ctx.restore();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, 2 * Math.PI);
+        ctx.fill();
     }
 
     move() {
