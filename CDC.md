@@ -39,7 +39,7 @@ Les rendre controllables :
 
 Gérer la capacité à communiquer :
     - temps estimé : 30min
-    - temps utilisé :
+    - temps utilisé : 40min
 
 Gérer les collisions et les sorties de plateau : 
     - temps estimé : 20~30min
