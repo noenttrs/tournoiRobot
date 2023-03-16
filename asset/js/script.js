@@ -278,28 +278,19 @@ class Robot {
         })
 
         if (this.wallDistance.top < 60) {
-            // rebondir
             // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
             // console.log(this.direction, this.name, 'top');
-            this.turn(Math.PI - this.direction);
+            // rebondir selon mon angle d'attaque tu le mur
+            console.log(this.direction);
         }
-        if (this.wallDistance.right < this.radarRadius) {
-            // rebondir
-            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
-            // console.log(this.direction, this.name, 'right');
-            this.turn(Math.PI - this.direction);
+        if (this.wallDistance.bottom < 60){
+            console.log(this.direction);
         }
-        if (this.wallDistance.bottom < this.radarRadius) {
-            // rebondir
-            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
-            // console.log(this.direction, this.name, 'bottom');
-            this.turn(Math.PI - this.direction);
+        if (this.wallDistance.right < 60){
+            console.log(this.direction);
         }
-        if (this.wallDistance.left < this.radarRadius) {
-            // rebondir
-            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
-            // console.log(this.direction, this.name, 'left');
-            this.turn(Math.PI - this.direction);
+        if (this.wallDistance.left <60){
+            console.log(this.direction);
         }
 
             
