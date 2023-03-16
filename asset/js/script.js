@@ -13,6 +13,8 @@ let centre = {
 let time = 0;
 let tick = 300;
 
+
+
 class Target {
     constructor(x, y) {
         this.lives = 10000;
@@ -24,8 +26,10 @@ class Target {
 
     draw() {
         ctx.fillStyle = this.color;
+        ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.fill();
+        ctx.closePath()
     }
 
     goodPosition() {
@@ -47,15 +51,26 @@ class Target {
         }
     }
 
-    degats(x, y) { // x et y sont les coordonnées du centre du robot qui a touché la cible, les dégats sont accetés si le robot est assez proche de la target, rayon de 20px
-        if (this.x + 20 > x && this.x - 20 < x) {
-            if (this.y + 20 > y && this.y - 20 < y) {
-                this.lives -= 1;
-            }
+    degats(x, y) { // x et y sont les coordonnées du centre du robot qui a touché la cible, les dégats sont accetés si le robot est assez proche de la target, rayon de 100px
+        let dx = this.x - x;
+        let dy = this.y - y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= 100) {
+            this.lives -= 1;
         }
     }
 
-    allowPosition() {
+    canDegats(x, y) { // x et y sont les coordonnées du centre du robot qui a touché la cible, les dégats sont accetés si le robot est assez proche de la target, rayon de 100px
+        let dx = this.x - x;
+        let dy = this.y - y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= 100) {
+            return true;
+        }
+        return false;
+    }
+
+    allowPosition(x, y) {
         if (this.x + 20 > x && this.x - 20 < x) {
             if (this.y + 20 > y && this.y - 20 < y) {
                 return { x: this.x, y: this.y }
@@ -74,11 +89,11 @@ class Robot {
         this.name = startPlace;
         this.radarRadius = 100;
         this.color = '#7B3F00';
-        this.speed = 0.5;
+        this.speed = 10;
         this.direction = 0;
         this.targetPosition = {
-            x: undefined,
-            y: undefined
+            x: null,
+            y: null
         }
         this.wallDistance = {
             top: undefined,
@@ -145,10 +160,12 @@ class Robot {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.fill();
+        ctx.closePath()
         ctx.fillStyle = 'black';
         ctx.beginPath();
         ctx.arc(this.x, this.y, 3, 0, 2 * Math.PI);
         ctx.fill();
+        ctx.closePath()
     }
 
     move() {
@@ -157,8 +174,8 @@ class Robot {
     }
 
     onTarget(target) {
-        if (this.x + this.width > target.x - target.radius && this.x < target.x + target.radius) {
-            if (this.y + this.height > target.y - target.radius && this.y < target.y + target.radius) {
+        if (this.x + this.radius > target.x - target.radius && this.x - this.radius < target.x + target.radius || this.x - this.radius < target.x + target.radius && this.x + this.radius > target.x - target.radius) {
+            if (this.y + this.radius > target.y - target.radius && this.y < target.y + target.radius || this.y - this.radius < target.y + target.radius && this.y + this.radius > target.y - target.radius) {
                 return true;
             }
         }
@@ -174,11 +191,9 @@ class Robot {
 
     collideRobot(robots) {
         for (let i = 0; i < robots.length; i++) {
-            if (this.x + this.width > robots[i].x && this.x < robots[i].x + robots[i].width) {
-                if (this.y + this.height > robots[i].y && this.y < robots[i].y + robots[i].height) {
-                    if (robots[i].name != this.name)
-                        return true;
-                }
+            const robot = robots[i];
+            if (robot.name !== this.name && Math.sqrt((robot.x - this.x) ** 2 + (robot.y - this.y) ** 2) < this.radius + robot.radius) {
+                return true;
             }
         }
         return false;
@@ -207,7 +222,7 @@ class Robot {
     // créer une méthode pour communiquer entre robots
 
     sendTargetPosition(robot, x, y) {
-        if (robot.name != this.name && Math.abs(this.x - robot.x) < this.radarRadius && Math.abs(this.y - robot.y < this.radarRadius)) {
+        if (robot.name != this.name && Math.abs(this.x - robot.x) < this.radarRadius && Math.abs(this.y - robot.y) < this.radarRadius) {
             robot.receiveTargetPosition(x, y);
         }
     }
@@ -226,28 +241,29 @@ class Robot {
         }
     }
 
+    getData(robot) {
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if(distance < this.radarRadius) {
+            return {
+                distance: distance,
+                angle: Math.atan2(dy, dx),
+                direction: robot.direction,
+                speed: robot.speed,
+                x: robot.x,
+                y: robot.y
+            }
+        }
+    }
+
+
     getDirection() {
         return this.direction;
     }
 
-    willCollide(robot) {
-        // Calculer la position du robot dans 10 itérations
-        let x = this.x + Math.cos(this.direction) * this.speed;
-        let y = this.y + Math.sin(this.direction) * this.speed;
-        let robotX = robot.x + Math.cos(robot.direction) * robot.speed;
-        let robotY = robot.y + Math.sin(robot.direction) * robot.speed;
-        for (let i = 0; i < 10; i++) {
-            if (x + this.width > robot.x && x < robot.x + robot.width) {
-                if (y + this.height > robot.y && y < robot.y + robot.height) {
-                    return true;
-                }
-            }
-            let x = x + Math.cos(this.direction) * this.speed;
-            let y = y + Math.sin(this.direction) * this.speed;
-            let robotX = robotX + Math.cos(robot.direction) * robot.speed;
-            let robotY = robotY + Math.sin(robot.direction) * robot.speed;
-        }
+    getSpeed() {
+        return this.speed;
     }
+
 
 
     algorithm(robots) {
@@ -264,39 +280,47 @@ class Robot {
 
         if (this.onTarget(target)) {
             this.damageTarget(target);
+            this.targetPosition.x = target.allowPosition(this.x, this.y).x;
+            this.targetPosition.y = target.allowPosition(this.x, this.y).y;
+        }
+
+        if (this.x - this.radius - 10 < 0) {
+            this.direction = Math.PI - this.direction;
+        }
+        if (this.x + this.radius + 10 > window.innerWidth) {
+            this.direction = Math.PI - this.direction;
+        }
+        if (this.y - this.radius - 10 < 0) {
+            this.direction = 2 * Math.PI - this.direction;
+        }
+        if (this.y + this.radius + 10 > window.innerHeight) {
+            this.direction = 2 * Math.PI - this.direction;
+        }
+
+        if (this.targetPosition.x != null && this.targetPosition.y != null) {
+            let angle = Math.atan2(this.targetPosition.y - this.y, this.targetPosition.x - this.x);
+            if (angle < 0) {
+                angle += 2 * Math.PI;
+            }
+            this.direction = angle;
+        }
+        if (this.onTarget(target)) {
+            console.log('on target');
             this.targetPosition.x = target.allowPosition.x;
             this.targetPosition.y = target.allowPosition.y;
+            robots.forEach(robot => {
+                this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
+            });
+            target.degats()
+        } else if (target.canDegats()) {
+            console.log('can degats');
+            robots.forEach(robot => {
+                this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
+            });
+            target.degats()
+        } else {
+            // this.move()
         }
-
-        robots.forEach(robot => {
-            if (this.detectRobot(robot) && !robot.name == this.name) {
-                if (this.willCollide(robot)) {
-                    this.turn(Math.PI + Math.random() * Math.PI / 2);
-                    this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
-                }
-            }
-        })
-
-        if (this.wallDistance.top < 60) {
-            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
-            // console.log(this.direction, this.name, 'top');
-            // rebondir selon mon angle d'attaque tu le mur
-            console.log(this.direction);
-        }
-        if (this.wallDistance.bottom < 60){
-            console.log(this.direction);
-        }
-        if (this.wallDistance.right < 60){
-            console.log(this.direction);
-        }
-        if (this.wallDistance.left <60){
-            console.log(this.direction);
-        }
-
-            
-
-
-        this.move();
 
     }
 
@@ -306,7 +330,7 @@ class Robot {
 
 let target = new Target(centre.x, centre.y);
 let robots = [];
-for (let i = 1; i < 2; i++) {
+for (let i = 1; i < 3; i++) {
     robots.push(new Robot(i));
 }
 
