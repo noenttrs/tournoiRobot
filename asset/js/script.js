@@ -252,7 +252,60 @@ class Robot {
 
     algorithm(robots) {
 
-        
+        this.wallPosition();
+
+        if (this.__init__) {
+            this.__init__ = false;
+            this.randomAngle();
+        }
+
+        // Here is the algorithm to make robots interact with each other
+        // This section need to be code by a human and not written by any ia
+
+        if (this.onTarget(target)) {
+            this.damageTarget(target);
+            this.targetPosition.x = target.allowPosition.x;
+            this.targetPosition.y = target.allowPosition.y;
+        }
+
+        robots.forEach(robot => {
+            if (this.detectRobot(robot) && !robot.name == this.name) {
+                if (this.willCollide(robot)) {
+                    this.turn(Math.PI + Math.random() * Math.PI / 2);
+                    this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
+                }
+            }
+        })
+
+        if (this.wallDistance.top < 60) {
+            // rebondir
+            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
+            // console.log(this.direction, this.name, 'top');
+            this.turn(Math.PI - this.direction);
+        }
+        if (this.wallDistance.right < this.radarRadius) {
+            // rebondir
+            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
+            // console.log(this.direction, this.name, 'right');
+            this.turn(Math.PI - this.direction);
+        }
+        if (this.wallDistance.bottom < this.radarRadius) {
+            // rebondir
+            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
+            // console.log(this.direction, this.name, 'bottom');
+            this.turn(Math.PI - this.direction);
+        }
+        if (this.wallDistance.left < this.radarRadius) {
+            // rebondir
+            // console.log(this.name + ' : ' + this.wallDistance.top + ' ' + this.wallDistance.right + ' ' + this.wallDistance.bottom + ' ' + this.wallDistance.left)
+            // console.log(this.direction, this.name, 'left');
+            this.turn(Math.PI - this.direction);
+        }
+
+            
+
+
+        this.move();
 
     }
 
