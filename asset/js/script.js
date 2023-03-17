@@ -11,7 +11,7 @@ let centre = {
 
 
 let time = 0;
-let tick = 300;
+let tick = 100;
 
 
 
@@ -54,13 +54,18 @@ class Target {
     degats(x, y) { // x et y sont les coordonnées du centre du robot qui a touché la cible, les dégats sont accetés si le robot est assez proche de la target, rayon de 100px
         let dx = this.x - x;
         let dy = this.y - y;
+
         let distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance <= 100) {
+        if (distance <= 300) {
+            // console.log(distance);
+            // console.log('degats');
             this.lives -= 1;
+            return true;
         }
+        return false;
     }
 
-    canDegats(x, y) { // x et y sont les coordonnées du centre du robot qui a touché la cible, les dégats sont accetés si le robot est assez proche de la target, rayon de 100px
+    canDegats(x, y) { // x et y sont les coordonnées du centre du robot qui a touché la cible, les dégats sont accetés si le robot est assez proche de la target, rayon de 300px
         let dx = this.x - x;
         let dy = this.y - y;
         let distance = Math.sqrt(dx * dx + dy * dy);
@@ -71,11 +76,14 @@ class Target {
     }
 
     allowPosition(x, y) {
-        if (this.x + 20 > x && this.x - 20 < x) {
-            if (this.y + 20 > y && this.y - 20 < y) {
-                return { x: this.x, y: this.y }
-            }
+        let dx = this.x - x;
+        let dy = this.y - y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= 40) {
+            // console.log('allowPosition');
+            return [this.x, this.y]
         }
+        console.log('dontAllowPosition');
         return false;
     }
 }
@@ -84,14 +92,15 @@ class Target {
 
 class Robot {
     constructor(startPlace) {
-        this.espace = 10;
+        this.espace = 30;
         this.radius = 25;
         this.name = startPlace;
         this.radarRadius = 100;
         this.color = '#7B3F00';
-        this.speed = 10;
+        this.speed = 2;
         this.direction = 0;
         this.targetPosition = {
+            haveIt: false,
             x: null,
             y: null
         }
@@ -204,7 +213,13 @@ class Robot {
     }
 
     turn(angle) {
-        this.direction += angle;
+        this.direction += angle * Math.PI / 180;
+        if(this.direction > 2 * Math.PI) {
+            this.direction -= 2 * Math.PI;
+        }
+        if(this.direction < 0) {
+            this.direction += 2 * Math.PI;
+        }
     }
 
     outOfMap() {
@@ -222,7 +237,12 @@ class Robot {
     // créer une méthode pour communiquer entre robots
 
     sendTargetPosition(robot, x, y) {
-        if (robot.name != this.name && Math.abs(this.x - robot.x) < this.radarRadius && Math.abs(this.y - robot.y) < this.radarRadius) {
+        let dx = robot.x - this.x;
+        let dy = robot.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (robot.name != this.name && distance < this.radarRadius && robot.targetPosition.haveIt == false) {
+            // console.log('sendTargetPosition to ' + robot.name + ' x: ' + x + ' y: ' + y + '');
             robot.receiveTargetPosition(x, y);
         }
     }
@@ -230,6 +250,8 @@ class Robot {
     receiveTargetPosition(x, y) {
         this.targetPosition.x = x;
         this.targetPosition.y = y;
+        this.targetPosition.haveIt = true;
+        console.log('receiveTargetPosition x: ' + x + ' y: ' + y + '');
     }
 
     wallPosition() {
@@ -242,8 +264,10 @@ class Robot {
     }
 
     getData(robot) {
+        let dx = robot.x - this.x;
+        let dy = robot.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
-        if(distance < this.radarRadius) {
+        if (distance < this.radarRadius) {
             return {
                 distance: distance,
                 angle: Math.atan2(dy, dx),
@@ -255,7 +279,6 @@ class Robot {
         }
     }
 
-
     getDirection() {
         return this.direction;
     }
@@ -264,11 +287,61 @@ class Robot {
         return this.speed;
     }
 
+    detectRight(robot) {
+        let dx = robot.x - this.x;
+        let dy = robot.y - this.y;
+        let angle = Math.atan2(dy, dx);
+        let angleToCheck = 135*Math.PI/180;
+        if (angle < 0) {
+            angle += 2 * Math.PI;
+        } else if (angle > 2 * Math.PI) {
+            angle -= 2 * Math.PI;
+        }
+        let diff = angle - this.direction;
+        if (diff < angleToCheck && diff > angle) {
+            console.log('detect right')
+            return true;
+        }
+    }
+    
+    detectLeft(robot) {
+        let dx = robot.x - this.x;
+        let dy = robot.y - this.y;
+        let angle = Math.atan2(dy, dx);
+        let angleToCheck = 135*Math.PI/180;
+        if (angle < 0) {
+            angle += 2 * Math.PI;
+        } else if (angle > 2 * Math.PI) {
+            angle -= 2 * Math.PI;
+        }
+        let diff = angle - this.direction;
+        if (diff < Math.PI*2-angleToCheck && diff > angleToCheck) {
+            console.log('detect left')
+            return true;
+        }
+    } 
 
+    detectPosition(robot, angle) {
+        let dx = robot.x - this.x;
+        let dy = robot.y - this.y;
+        let robotAngle = Math.atan2(dy, dx);
+        angle = angle * Math.PI / 180;
+        let diff = robotAngle - this.direction * 2;
+        if (diff < -Math.PI) {
+            diff += 2 * Math.PI;
+        } else if (diff > Math.PI) {
+          diff -= 2 * Math.PI;
+        }
+        if (diff < -angle) {
+            return 'right';
+        } else if (diff > angle) {
+            return 'left';
+        } else {
+            return false;
+        }
+      }
 
     algorithm(robots) {
-
-        this.wallPosition();
 
         if (this.__init__) {
             this.__init__ = false;
@@ -277,12 +350,6 @@ class Robot {
 
         // Here is the algorithm to make robots interact with each other
         // This section need to be code by a human and not written by any ia
-
-        if (this.onTarget(target)) {
-            this.damageTarget(target);
-            this.targetPosition.x = target.allowPosition(this.x, this.y).x;
-            this.targetPosition.y = target.allowPosition(this.x, this.y).y;
-        }
 
         if (this.x - this.radius - 10 < 0) {
             this.direction = Math.PI - this.direction;
@@ -297,30 +364,54 @@ class Robot {
             this.direction = 2 * Math.PI - this.direction;
         }
 
+
         if (this.targetPosition.x != null && this.targetPosition.y != null) {
-            let angle = Math.atan2(this.targetPosition.y - this.y, this.targetPosition.x - this.x);
+            let dx = this.targetPosition.x - this.x;
+            let dy = this.targetPosition.y - this.y;
+            let angle = Math.atan2(dx, dy);
             if (angle < 0) {
                 angle += 2 * Math.PI;
             }
             this.direction = angle;
         }
+
         if (this.onTarget(target)) {
-            console.log('on target');
-            this.targetPosition.x = target.allowPosition.x;
-            this.targetPosition.y = target.allowPosition.y;
+            // console.log('on target');
+            this.targetPosition.x = target.allowPosition(this.x, this.y)[0];
+            this.targetPosition.y = target.allowPosition(this.x, this.y)[1];
+            this.targetPosition.haveIt = true;
             robots.forEach(robot => {
-                this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
+                if (this.name != robot.name) {
+                    this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
+                }
             });
-            target.degats()
-        } else if (target.canDegats()) {
-            console.log('can degats');
+            target.degats(this.x, this.y);
+            return;
+        } else if (target.canDegats(this.x, this.y) && this.targetPosition.haveIt === true) {
+            // console.log('can degats');
             robots.forEach(robot => {
-                this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
+                if (this.name != robot.name) {
+                    this.sendTargetPosition(robot, this.targetPosition.x, this.targetPosition.y);
+                }
             });
-            target.degats()
+            target.degats(this.x, this.y);
+            return;
         } else {
-            // this.move()
+            robots.forEach(robot => {
+                if (this.detectRight(robot) && this.detectLeft(robot)  && this.name != robot.name){
+                    return;
+                }
+                if (this.detectRight(robot) && !this.detectLeft(robot)  && this.name != robot.name) {
+                    this.turn(-3)
+                }
+                if (this.detectLeft(robot) && !this.detectRight(robot)  && this.name != robot.name) {
+                    this.turn(3)
+                }
+                
+            });
         }
+
+        this.move()
 
     }
 
@@ -330,7 +421,7 @@ class Robot {
 
 let target = new Target(centre.x, centre.y);
 let robots = [];
-for (let i = 1; i < 3; i++) {
+for (let i = 1; i < 5; i++) {
     robots.push(new Robot(i));
 }
 
@@ -353,6 +444,11 @@ let game = setInterval(() => {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     target.draw();
 
+    ctx.font = "24px sans-serif";
+    ctx.fillText(`    ${target.lives / 100}%`, 10, 50)
+    // ctx.fillText(`    ${target.lives}`, 10, 80)
+    ctx.fillText(`    ${Math.round(time / tick)} seconds`, 10, 80)
+
     // ctx.fillStyle = 'black';
     // ctx.beginPath();
     // ctx.arc(centre.x, centre.y, 3, 0, 2 * Math.PI);
@@ -365,20 +461,22 @@ let game = setInterval(() => {
         robot.draw();
         if (robot.collideRobot(robots)) {
             game = clearInterval(game);
-            alert('You lose in ' + time / tick + ' seconds');
+            console.log('You lose in ' + time / tick + ' seconds');
 
         }
         if (robot.outOfMap()) {
             game = clearInterval(game);
-            alert('You lose in ' + time / tick + ' seconds');
+            console.log('You lose in ' + time / tick + ' seconds');
         }
 
         robot.algorithm(robots);
+
+        if (target.lives <= 0) {
+            game = clearInterval(game);
+            console.log('Win in ' + time / tick + ' seconds');
+        }
     });
 
-    if (target.lives <= 0) {
-        alert('Win in ' + time / tick + ' seconds');
-    }
 
 }, 1000 / tick);
 
